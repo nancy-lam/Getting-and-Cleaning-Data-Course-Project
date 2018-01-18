@@ -1,9 +1,4 @@
-A- Download source data and unzip it to R
-
-About source data
-As sourse data for work was used Human Activity Recognition Using Smartphones Data Set. A full description is available at the site where the data was obtained: http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones 
-
-Here are the data for the project: https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip
+A- Download source data https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip and unzip it to R
 
 B- Reading files
 
@@ -13,7 +8,7 @@ B- Reading files
    - Reading activity labels
    - Assigning column names
 
-File with R code "run_analysis.R" perform 5 following steps :
+C- Create one R script called run_analysis.R that does the following
 
 1. Merging the training and the test sets to create one data set.
 
