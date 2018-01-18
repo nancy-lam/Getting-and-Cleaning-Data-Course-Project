@@ -6,7 +6,7 @@ OVERVIEW
 
 library(dplyr)
 
-#STEP 1: GET DATA
+#A: GET DATA
 
 # download zip file containing data if it hasn't already been downloaded
 zipUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
@@ -21,7 +21,7 @@ if (!file.exists(dataPath)) {
   unzip(zipFile)
 }
 
-#STEP 2: READ DATA
+#B: READ DATA
 
 # read training data
 trainingSubjects <- read.table(file.path(dataPath, "train", "subject_train.txt"))
@@ -41,3 +41,67 @@ features <- read.table(file.path(dataPath, "features.txt"), as.is = TRUE)
 # read activity labels
 activities <- read.table(file.path(dataPath, "activity_labels.txt"))
 colnames(activities) <- c("activityId", "activityLabel")
+
+# Step 1 - Merge the training and the test sets to create one data set
+
+# concatenate individual data tables to make single data table
+humanActivity <- rbind(
+  cbind(trainingSubjects, trainingValues, trainingActivity),
+  cbind(testSubjects, testValues, testActivity)
+)
+
+# remove individual data tables to save memory
+rm(trainingSubjects, trainingValues, trainingActivity, 
+   testSubjects, testValues, testActivity)
+
+# assign column names
+colnames(humanActivity) <- c("subject", features[, 2], "activity")
+
+#Step 2 - Extracts only the measurements on the mean and standard deviation for each measurement
+
+# determine columns of data set to keep based on column name...
+columnsToKeep <- grepl("subject|activity|mean|std", colnames(humanActivity))
+
+# ... and keep data in these columns only
+humanActivity <- humanActivity[, columnsToKeep]
+
+#Step 3 - Uses descriptive activity names to name the activities in the data set
+
+# replace activity values with named factor levels
+humanActivity$activity <- factor(humanActivity$activity, 
+  levels = activities[, 1], labels = activities[, 2])
+
+#Step 4 - Appropriately labels the data set with descriptive variable names.
+
+# get column names
+humanActivityCols <- colnames(humanActivity)
+
+# remove special characters
+humanActivityCols <- gsub("[\\(\\)-]", "", humanActivityCols)
+
+# expand abbreviations and clean up names
+humanActivityCols <- gsub("^f", "frequencyDomain", humanActivityCols)
+humanActivityCols <- gsub("^t", "timeDomain", humanActivityCols)
+humanActivityCols <- gsub("Acc", "Accelerometer", humanActivityCols)
+humanActivityCols <- gsub("Gyro", "Gyroscope", humanActivityCols)
+humanActivityCols <- gsub("Mag", "Magnitude", humanActivityCols)
+humanActivityCols <- gsub("Freq", "Frequency", humanActivityCols)
+humanActivityCols <- gsub("mean", "Mean", humanActivityCols)
+humanActivityCols <- gsub("std", "StandardDeviation", humanActivityCols)
+
+# correct typo
+humanActivityCols <- gsub("BodyBody", "Body", humanActivityCols)
+
+# use new labels as column names
+colnames(humanActivity) <- humanActivityCols
+
+#Step 5 - From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject.
+
+# group by subject and activity and summarise using mean
+humanActivityMeans <- humanActivity %>% 
+  group_by(subject, activity) %>%
+  summarise_each(funs(mean))
+
+# output to file "tidy_data.txt"
+write.table(humanActivityMeans, "tidy_data.txt", row.names = FALSE, 
+            quote = FALSE)
